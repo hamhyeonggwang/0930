@@ -7,49 +7,49 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- 게임 시작 화면 -->
-    <div class="start-screen" id="startScreen">
-        <div class="start-content">
-            <h1>🎮 벽돌깨기 게임</h1>
-            <p>클래식한 벽돌깨기를 현대적으로 재해석한 게임입니다!</p>
-            
-            <div class="game-features">
-                <div class="feature">
-                    <h3>🎯 10단계 난이도</h3>
-                    <p>초보자부터 고수까지!</p>
+        <!-- 게임 시작 화면 -->
+        <div class="start-screen" id="startScreen">
+            <div class="retro-game-display">
+                <!-- 게임 제목 -->
+                <div class="game-title">
+                    <div class="title-line">BRICK</div>
+                    <div class="title-line">BREAKER</div>
                 </div>
-                <div class="feature">
-                    <h3>🎁 특별 아이템</h3>
-                    <p>멀티볼, 패들 확장, 미사일</p>
+                
+                <!-- 레트로 벽돌 패턴 -->
+                <div class="retro-bricks">
+                    <div class="brick-row red"></div>
+                    <div class="brick-row orange"></div>
+                    <div class="brick-row yellow"></div>
+                    <div class="brick-row green"></div>
+                    <div class="brick-row blue"></div>
                 </div>
-                <div class="feature">
-                    <h3>🎵 전자음 효과</h3>
-                    <p>몰입감 있는 사운드</p>
+                
+                <!-- 공과 패들 -->
+                <div class="game-elements">
+                    <div class="retro-ball"></div>
+                    <div class="retro-paddle"></div>
                 </div>
-            </div>
-            
-            <div class="mode-selection">
-                <h3>🎮 게임 모드 선택</h3>
-                <div class="mode-buttons">
-                    <button onclick="selectMode('normal')" class="mode-select-btn" id="startNormalBtn">
-                        <div class="mode-icon">📱</div>
-                        <div class="mode-title">일반 모드</div>
-                        <div class="mode-desc">클래식한 벽돌깨기</div>
-                    </button>
-                    <button onclick="selectMode('side')" class="mode-select-btn" id="startSideBtn">
-                        <div class="mode-icon">🔄</div>
-                        <div class="mode-title">사이드 모드</div>
-                        <div class="mode-desc">좌/우 벽돌을 옆에서 깨기</div>
-                    </button>
+                
+                <!-- 모드 선택 -->
+                <div class="mode-selection">
+                    <div class="mode-buttons">
+                        <button onclick="selectMode('normal')" class="retro-mode-btn" id="startNormalBtn">
+                            <span class="mode-text">NORMAL</span>
+                        </button>
+                        <button onclick="selectMode('side')" class="retro-mode-btn" id="startSideBtn">
+                            <span class="mode-text">SIDE</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="start-buttons">
-                <button onclick="startGame()" class="start-btn" id="startGameBtn" disabled>게임 시작</button>
-                <button onclick="showTutorial()" class="tutorial-btn">게임 방법</button>
+                
+                <!-- 시작 버튼 -->
+                <div class="start-buttons">
+                    <button onclick="startGame()" class="retro-start-btn" id="startGameBtn" disabled>START GAME</button>
+                    <button onclick="showTutorial()" class="retro-tutorial-btn">HOW TO PLAY</button>
+                </div>
             </div>
         </div>
-    </div>
 
     <!-- 게임 화면 -->
     <div class="game-container" id="gameContainer" style="display: none;">
