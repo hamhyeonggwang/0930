@@ -1456,6 +1456,71 @@ function changeGameMode(mode) {
 }
 
 // 설정 이벤트 리스너
+// 게임 시작
+function startGame() {
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('gameContainer').style.display = 'flex';
+    initGame();
+    updateUI();
+    loadSettings();
+}
+
+// 튜토리얼 표시
+function showTutorial() {
+    const tutorial = document.createElement('div');
+    tutorial.className = 'tutorial-modal';
+    tutorial.innerHTML = `
+        <div class="tutorial-content">
+            <h2>🎮 게임 방법</h2>
+            <div class="tutorial-section">
+                <h3>🎯 기본 조작</h3>
+                <p>• 마우스나 조이스틱으로 패들을 움직이세요</p>
+                <p>• 공이 패들에 맞으면 위로 튕겨갑니다</p>
+                <p>• 모든 벽돌을 깨면 다음 단계로 진행됩니다</p>
+            </div>
+            <div class="tutorial-section">
+                <h3>⌨️ 키보드 조작</h3>
+                <p>• <strong>시프트 키</strong>: 일시정지</p>
+                <p>• <strong>스페이스바</strong>: 미사일 발사 (미사일 아이템 획득 시)</p>
+                <p>• <strong>Ctrl 키</strong>: 슬로우 모드 (공 속도 50% 감소)</p>
+            </div>
+            <div class="tutorial-section">
+                <h3>🎁 아이템</h3>
+                <p>• <strong>🟡 노란색</strong>: 멀티볼 (공이 3개로 분열)</p>
+                <p>• <strong>🟢 초록색</strong>: 패들 확장 (패들이 길어짐)</p>
+                <p>• <strong>🔴 빨간색</strong>: 미사일 (스페이스바로 발사)</p>
+            </div>
+            <div class="tutorial-section">
+                <h3>🎮 게임 모드</h3>
+                <p>• <strong>일반 모드</strong>: 클래식한 벽돌깨기</p>
+                <p>• <strong>사이드 모드</strong>: 좌/우 벽돌을 옆에서 깨기</p>
+            </div>
+            <button onclick="closeTutorial()" class="close-tutorial">닫기</button>
+        </div>
+    `;
+    tutorial.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+    `;
+    document.body.appendChild(tutorial);
+}
+
+// 튜토리얼 닫기
+function closeTutorial() {
+    const tutorial = document.querySelector('.tutorial-modal');
+    if (tutorial) {
+        tutorial.remove();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 설정 슬라이더 이벤트
     document.getElementById('gameSpeed').addEventListener('input', (e) => {
@@ -1471,8 +1536,4 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('soundEnabled').addEventListener('change', (e) => {
         gameState.soundEnabled = e.target.checked;
     });
-    
-    initGame();
-    updateUI();
-    loadSettings();
 });

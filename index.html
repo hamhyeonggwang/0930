@@ -7,7 +7,36 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="game-container">
+    <!-- 게임 시작 화면 -->
+    <div class="start-screen" id="startScreen">
+        <div class="start-content">
+            <h1>🎮 벽돌깨기 게임</h1>
+            <p>클래식한 벽돌깨기를 현대적으로 재해석한 게임입니다!</p>
+            
+            <div class="game-features">
+                <div class="feature">
+                    <h3>🎯 10단계 난이도</h3>
+                    <p>초보자부터 고수까지!</p>
+                </div>
+                <div class="feature">
+                    <h3>🎁 특별 아이템</h3>
+                    <p>멀티볼, 패들 확장, 미사일</p>
+                </div>
+                <div class="feature">
+                    <h3>🎵 전자음 효과</h3>
+                    <p>몰입감 있는 사운드</p>
+                </div>
+            </div>
+            
+            <div class="start-buttons">
+                <button onclick="startGame()" class="start-btn">게임 시작</button>
+                <button onclick="showTutorial()" class="tutorial-btn">게임 방법</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 게임 화면 -->
+    <div class="game-container" id="gameContainer" style="display: none;">
         <div class="game-header">
             <div class="score">점수: <span id="score">0</span></div>
             <div class="stage">단계: <span id="stage">1</span></div>

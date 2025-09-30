@@ -10,6 +10,117 @@ body {
     color: #ecf0f1;
     overflow: hidden;
     height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+/* 게임 시작 화면 */
+.start-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #2c3e50, #34495e, #3498db);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.start-content {
+    text-align: center;
+    max-width: 800px;
+    padding: 40px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 20px;
+    border: 3px solid #3498db;
+    box-shadow: 0 0 50px rgba(52, 152, 219, 0.5);
+}
+
+.start-content h1 {
+    font-size: 3em;
+    margin-bottom: 20px;
+    color: #3498db;
+    text-shadow: 0 0 20px rgba(52, 152, 219, 0.8);
+}
+
+.start-content p {
+    font-size: 1.2em;
+    margin-bottom: 40px;
+    color: #ecf0f1;
+}
+
+.game-features {
+    display: flex;
+    justify-content: space-around;
+    margin: 40px 0;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.feature {
+    background: rgba(52, 152, 219, 0.1);
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid #3498db;
+    min-width: 200px;
+    flex: 1;
+}
+
+.feature h3 {
+    color: #3498db;
+    margin-bottom: 10px;
+    font-size: 1.3em;
+}
+
+.feature p {
+    color: #bdc3c7;
+    margin: 0;
+    font-size: 1em;
+}
+
+.start-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 40px;
+    flex-wrap: wrap;
+}
+
+.start-btn, .tutorial-btn {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 150px;
+}
+
+.start-btn {
+    background: linear-gradient(45deg, #2ecc71, #27ae60);
+    color: white;
+    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+}
+
+.start-btn:hover {
+    background: linear-gradient(45deg, #27ae60, #229954);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.6);
+}
+
+.tutorial-btn {
+    background: linear-gradient(45deg, #3498db, #2980b9);
+    color: white;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+}
+
+.tutorial-btn:hover {
+    background: linear-gradient(45deg, #2980b9, #21618c);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.6);
 }
 
 .game-container {
