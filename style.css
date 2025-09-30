@@ -153,6 +153,130 @@ body {
     pointer-events: none;
 }
 
+/* 설정 패널 */
+.settings-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.95);
+    color: #ecf0f1;
+    padding: 30px;
+    border-radius: 15px;
+    border: 3px solid #3498db;
+    box-shadow: 0 0 30px rgba(52, 152, 219, 0.8);
+    z-index: 2000;
+    display: none;
+    min-width: 400px;
+}
+
+.settings-panel h3 {
+    margin: 0 0 20px 0;
+    text-align: center;
+    color: #3498db;
+    font-size: 24px;
+}
+
+.setting-group {
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.setting-group label {
+    font-weight: bold;
+    min-width: 120px;
+}
+
+.setting-group input[type="range"] {
+    flex: 1;
+    margin: 0 10px;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: #34495e;
+    border-radius: 3px;
+    outline: none;
+}
+
+.setting-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #3498db;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.setting-group input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #3498db;
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.setting-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.setting-group span {
+    min-width: 50px;
+    text-align: right;
+    color: #3498db;
+    font-weight: bold;
+}
+
+.setting-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    gap: 10px;
+}
+
+.setting-buttons button {
+    flex: 1;
+    padding: 10px 15px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.setting-buttons button:hover {
+    background: #2980b9;
+}
+
+.settings-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(52, 152, 219, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+}
+
+.settings-button:hover {
+    background: rgba(52, 152, 219, 1);
+    transform: scale(1.1);
+}
+
 /* 반응형 디자인 */
 @media (max-width: 900px) {
     .game-header {
@@ -179,5 +303,25 @@ body {
     .joystick-knob {
         width: 35px;
         height: 35px;
+    }
+    
+    .settings-panel {
+        min-width: 300px;
+        padding: 20px;
+    }
+    
+    .setting-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .setting-group label {
+        min-width: auto;
+    }
+    
+    .setting-group input[type="range"] {
+        width: 100%;
+        margin: 0;
     }
 }

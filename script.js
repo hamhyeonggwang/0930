@@ -28,7 +28,12 @@ const gameState = {
     
     // 사운드
     audioContext: null,
-    sounds: {}
+    sounds: {},
+    
+    // 설정
+    gameSpeed: 1.0,
+    soundVolume: 0.5,
+    soundEnabled: true
 };
 
 // 단계별 설정
@@ -84,7 +89,7 @@ function initAudio() {
 // 전자음 생성
 function createTone(frequency, duration, type = 'sine') {
     return function() {
-        if (!gameState.audioContext) return;
+        if (!gameState.audioContext || !gameState.soundEnabled) return;
         
         const oscillator = gameState.audioContext.createOscillator();
         const gainNode = gameState.audioContext.createGain();
@@ -95,7 +100,8 @@ function createTone(frequency, duration, type = 'sine') {
         oscillator.frequency.setValueAtTime(frequency, gameState.audioContext.currentTime);
         oscillator.type = type;
         
-        gainNode.gain.setValueAtTime(0.3, gameState.audioContext.currentTime);
+        const volume = 0.3 * gameState.soundVolume;
+        gainNode.gain.setValueAtTime(volume, gameState.audioContext.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.01, gameState.audioContext.currentTime + duration);
         
         oscillator.start(gameState.audioContext.currentTime);
@@ -602,7 +608,11 @@ function gameLoop() {
     
     update();
     draw();
-    requestAnimationFrame(gameLoop);
+    
+    // 게임 속도 조절
+    setTimeout(() => {
+        requestAnimationFrame(gameLoop);
+    }, 1000 / (60 * gameState.gameSpeed));
 }
 
 // 게임 업데이트
@@ -1228,8 +1238,88 @@ function hidePauseMessage() {
     }
 }
 
-// 게임 시작
+// 설정 관련 함수들
+function toggleSettings() {
+    const panel = document.getElementById('settingsPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    loadSettings();
+}
+
+function closeSettings() {
+    document.getElementById('settingsPanel').style.display = 'none';
+}
+
+function loadSettings() {
+    // 로컬 스토리지에서 설정 로드
+    const savedSettings = localStorage.getItem('brickBreakerSettings');
+    if (savedSettings) {
+        const settings = JSON.parse(savedSettings);
+        gameState.gameSpeed = settings.gameSpeed || 1.0;
+        gameState.soundVolume = settings.soundVolume || 0.5;
+        gameState.soundEnabled = settings.soundEnabled !== false;
+    }
+    
+    // UI 업데이트
+    document.getElementById('gameSpeed').value = gameState.gameSpeed;
+    document.getElementById('soundVolume').value = gameState.soundVolume;
+    document.getElementById('soundEnabled').checked = gameState.soundEnabled;
+    
+    updateSettingValues();
+}
+
+function saveSettings() {
+    // 현재 설정값 가져오기
+    gameState.gameSpeed = parseFloat(document.getElementById('gameSpeed').value);
+    gameState.soundVolume = parseFloat(document.getElementById('soundVolume').value);
+    gameState.soundEnabled = document.getElementById('soundEnabled').checked;
+    
+    // 로컬 스토리지에 저장
+    const settings = {
+        gameSpeed: gameState.gameSpeed,
+        soundVolume: gameState.soundVolume,
+        soundEnabled: gameState.soundEnabled
+    };
+    localStorage.setItem('brickBreakerSettings', JSON.stringify(settings));
+    
+    updateSettingValues();
+    closeSettings();
+}
+
+function resetSettings() {
+    gameState.gameSpeed = 1.0;
+    gameState.soundVolume = 0.5;
+    gameState.soundEnabled = true;
+    
+    document.getElementById('gameSpeed').value = 1.0;
+    document.getElementById('soundVolume').value = 0.5;
+    document.getElementById('soundEnabled').checked = true;
+    
+    updateSettingValues();
+}
+
+function updateSettingValues() {
+    document.getElementById('speedValue').textContent = gameState.gameSpeed.toFixed(1) + 'x';
+    document.getElementById('volumeValue').textContent = Math.round(gameState.soundVolume * 100) + '%';
+}
+
+// 설정 이벤트 리스너
 document.addEventListener('DOMContentLoaded', () => {
+    // 설정 슬라이더 이벤트
+    document.getElementById('gameSpeed').addEventListener('input', (e) => {
+        gameState.gameSpeed = parseFloat(e.target.value);
+        updateSettingValues();
+    });
+    
+    document.getElementById('soundVolume').addEventListener('input', (e) => {
+        gameState.soundVolume = parseFloat(e.target.value);
+        updateSettingValues();
+    });
+    
+    document.getElementById('soundEnabled').addEventListener('change', (e) => {
+        gameState.soundEnabled = e.target.checked;
+    });
+    
     initGame();
     updateUI();
+    loadSettings();
 });

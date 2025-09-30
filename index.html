@@ -28,6 +28,36 @@
             <p>마우스나 조이스틱으로 패들을 움직이세요!</p>
             <p>아이템을 획득하여 특별한 효과를 경험하세요!</p>
         </div>
+        
+        <div class="settings-panel" id="settingsPanel">
+            <h3>게임 설정</h3>
+            
+            <div class="setting-group">
+                <label for="gameSpeed">게임 속도:</label>
+                <input type="range" id="gameSpeed" min="0.5" max="2" step="0.1" value="1">
+                <span id="speedValue">1.0x</span>
+            </div>
+            
+            <div class="setting-group">
+                <label for="soundVolume">사운드 볼륨:</label>
+                <input type="range" id="soundVolume" min="0" max="1" step="0.1" value="0.5">
+                <span id="volumeValue">50%</span>
+            </div>
+            
+            <div class="setting-group">
+                <label for="soundEnabled">사운드:</label>
+                <input type="checkbox" id="soundEnabled" checked>
+                <span>켜기</span>
+            </div>
+            
+            <div class="setting-buttons">
+                <button onclick="saveSettings()">설정 저장</button>
+                <button onclick="resetSettings()">기본값</button>
+                <button onclick="closeSettings()">닫기</button>
+            </div>
+        </div>
+        
+        <button class="settings-button" onclick="toggleSettings()">⚙️ 설정</button>
     </div>
     
     <script src="script.js"></script>
