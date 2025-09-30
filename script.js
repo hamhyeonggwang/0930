@@ -684,10 +684,18 @@ function updateTrajectoryGuide() {
 
 // 공 리셋
 function resetBall() {
+    const config = stageConfig[gameState.currentStage];
+    const baseSpeed = config.speed;
+    
+    // 메인 공 리셋
     gameState.ball.x = gameState.canvas.width / 2;
     gameState.ball.y = gameState.canvas.height - 100;
-    gameState.ball.dx = 4;
-    gameState.ball.dy = -4;
+    gameState.ball.dx = baseSpeed;
+    gameState.ball.dy = -baseSpeed;
+    gameState.ball.baseSpeed = baseSpeed;
+    
+    // 멀티볼이 있다면 모든 공을 메인 공으로 리셋
+    gameState.balls = [gameState.ball];
 }
 
 // 아이템 업데이트
