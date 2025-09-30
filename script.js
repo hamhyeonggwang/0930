@@ -256,6 +256,7 @@ function updateBall() {
     // 바닥에 떨어짐
     if (gameState.ball.y >= gameState.canvas.height) {
         gameState.lives--;
+        updateUI(); // 생명 UI 업데이트 추가
         if (gameState.lives <= 0) {
             gameOver();
         } else {
@@ -333,6 +334,7 @@ function checkCollisions() {
             
             brick.visible = false;
             gameState.score += 10;
+            updateUI(); // 점수 UI 업데이트 추가
             gameState.sounds.brickBreak();
             
             // 파티클 효과
@@ -373,6 +375,7 @@ function checkCollisions() {
                 
                 brick.visible = false;
                 gameState.score += 10;
+                updateUI(); // 점수 UI 업데이트 추가
                 gameState.sounds.brickBreak();
                 createParticles(brick.x + brick.width/2, brick.y + brick.height/2);
                 gameState.missiles.splice(i, 1);
