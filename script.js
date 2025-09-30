@@ -153,7 +153,7 @@ function initBricks() {
     const brickWidth = 70;
     const brickHeight = 25;
     const padding = 5;
-    const offsetTop = 50;
+    const offsetTop = 100; // 1단계에서 벽돌을 아래로 이동
     const offsetLeft = (gameState.canvas.width - (cols * (brickWidth + padding) - padding)) / 2;
     
     // 가이드라인 생성
