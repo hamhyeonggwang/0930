@@ -609,10 +609,8 @@ function gameLoop() {
     update();
     draw();
     
-    // 게임 속도 조절
-    setTimeout(() => {
-        requestAnimationFrame(gameLoop);
-    }, 1000 / (60 * gameState.gameSpeed));
+    // 게임 속도 조절 - requestAnimationFrame 사용
+    requestAnimationFrame(gameLoop);
 }
 
 // 게임 업데이트
@@ -634,8 +632,8 @@ function updateBall() {
     // 모든 공 업데이트
     for (let i = gameState.balls.length - 1; i >= 0; i--) {
         const ball = gameState.balls[i];
-        ball.x += ball.dx;
-        ball.y += ball.dy;
+        ball.x += ball.dx * gameState.gameSpeed;
+        ball.y += ball.dy * gameState.gameSpeed;
         
         // 벽 충돌
         if (ball.x <= ball.radius || ball.x >= gameState.canvas.width - ball.radius) {
@@ -691,7 +689,7 @@ function resetBall() {
 function updateItems() {
     for (let i = gameState.items.length - 1; i >= 0; i--) {
         const item = gameState.items[i];
-        item.y += 3;
+        item.y += 3 * gameState.gameSpeed;
         
         if (item.y > gameState.canvas.height) {
             gameState.items.splice(i, 1);
@@ -703,7 +701,7 @@ function updateItems() {
 function updateMissiles() {
     for (let i = gameState.missiles.length - 1; i >= 0; i--) {
         const missile = gameState.missiles[i];
-        missile.y -= 5;
+        missile.y -= 5 * gameState.gameSpeed;
         
         if (missile.y < 0) {
             gameState.missiles.splice(i, 1);
@@ -715,8 +713,8 @@ function updateMissiles() {
 function updateParticles() {
     for (let i = gameState.particles.length - 1; i >= 0; i--) {
         const particle = gameState.particles[i];
-        particle.x += particle.dx;
-        particle.y += particle.dy;
+        particle.x += particle.dx * gameState.gameSpeed;
+        particle.y += particle.dy * gameState.gameSpeed;
         particle.life--;
         
         if (particle.life <= 0) {
@@ -737,11 +735,11 @@ function updateMagneticFields() {
             const angle = Math.atan2(dy, dx);
             
             if (field.type === 'attract') {
-                gameState.ball.dx -= Math.cos(angle) * force * 0.1;
-                gameState.ball.dy -= Math.sin(angle) * force * 0.1;
+                gameState.ball.dx -= Math.cos(angle) * force * 0.1 * gameState.gameSpeed;
+                gameState.ball.dy -= Math.sin(angle) * force * 0.1 * gameState.gameSpeed;
             } else {
-                gameState.ball.dx += Math.cos(angle) * force * 0.1;
-                gameState.ball.dy += Math.sin(angle) * force * 0.1;
+                gameState.ball.dx += Math.cos(angle) * force * 0.1 * gameState.gameSpeed;
+                gameState.ball.dy += Math.sin(angle) * force * 0.1 * gameState.gameSpeed;
             }
         }
     }
