@@ -862,10 +862,10 @@ function checkCollisions() {
                 // 파티클 효과
                 createParticles(brick.x + brick.width/2, brick.y + brick.height/2);
                 
-                // 아이템 생성 (10% 확률)
-                if (Math.random() < 0.1) {
-                    createItem(brick.x + brick.width/2, brick.y + brick.height/2);
-                }
+            // 아이템 생성 (50% 확률로 테스트용)
+            if (Math.random() < 0.5) {
+                createItem(brick.x + brick.width/2, brick.y + brick.height/2);
+            }
                 
                 // 공 방향 변경
                 ball.dy = -ball.dy;
@@ -877,10 +877,11 @@ function checkCollisions() {
     // 아이템과 패들 충돌
     for (let i = gameState.items.length - 1; i >= 0; i--) {
         const item = gameState.items[i];
-        if (item.y + 20 >= gameState.paddle.y &&
+        if (item.y + item.height >= gameState.paddle.y &&
             item.x >= gameState.paddle.x &&
             item.x <= gameState.paddle.x + gameState.paddle.width) {
             
+            console.log('아이템 획득:', item.type); // 디버깅용
             applyItemEffect(item.type);
             gameState.sounds.itemPickup();
             gameState.items.splice(i, 1);
@@ -913,6 +914,8 @@ function createItem(x, y) {
     const types = ['multiBall', 'extendPaddle', 'missile'];
     const type = types[Math.floor(Math.random() * types.length)];
     
+    console.log('아이템 생성:', type, '위치:', x, y); // 디버깅용
+    
     gameState.items.push({
         x: x - 10,
         y: y,
@@ -935,28 +938,40 @@ function getItemColor(type) {
 
 // 아이템 효과 적용
 function applyItemEffect(type) {
+    console.log('아이템 효과 적용:', type); // 디버깅용
+    
     switch (type) {
         case 'multiBall':
+            console.log('멀티볼 효과 활성화');
             gameState.multiBall = true;
             createMultiBalls(); // 멀티볼 생성
             setTimeout(() => { 
+                console.log('멀티볼 효과 해제');
                 gameState.multiBall = false;
                 // 추가 공들 제거
                 gameState.balls = gameState.balls.filter(ball => ball === gameState.ball);
             }, 10000);
             break;
         case 'extendPaddle':
+            console.log('패들 확장 효과 활성화');
             gameState.paddleExtended = true;
             gameState.paddle.width = 150;
             setTimeout(() => {
+                console.log('패들 확장 효과 해제');
                 gameState.paddleExtended = false;
                 gameState.paddle.width = 100;
             }, 10000);
             break;
         case 'missile':
+            console.log('미사일 모드 활성화');
             gameState.missileMode = true;
-            setTimeout(() => { gameState.missileMode = false; }, 10000);
+            setTimeout(() => { 
+                console.log('미사일 모드 해제');
+                gameState.missileMode = false; 
+            }, 10000);
             break;
+        default:
+            console.log('알 수 없는 아이템 타입:', type);
     }
 }
 
