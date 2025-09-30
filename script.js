@@ -12,6 +12,7 @@ const gameState = {
     
     // 게임 객체들
     ball: null,
+    balls: [], // 멀티볼을 위한 배열
     paddle: null,
     bricks: [],
     items: [],
@@ -116,6 +117,9 @@ function initBall() {
         color: '#fff',
         baseSpeed: baseSpeed
     };
+    
+    // balls 배열 초기화 (메인 공만 포함)
+    gameState.balls = [gameState.ball];
 }
 
 // 패들 초기화
@@ -617,29 +621,39 @@ function update() {
 
 // 공 업데이트
 function updateBall() {
-    gameState.ball.x += gameState.ball.dx;
-    gameState.ball.y += gameState.ball.dy;
-    
-    // 벽 충돌
-    if (gameState.ball.x <= gameState.ball.radius || gameState.ball.x >= gameState.canvas.width - gameState.ball.radius) {
-        gameState.ball.dx = -gameState.ball.dx;
-    }
-    if (gameState.ball.y <= gameState.ball.radius) {
-        gameState.ball.dy = -gameState.ball.dy;
-    }
-    
-    // 바닥에 떨어짐
-    if (gameState.ball.y >= gameState.canvas.height) {
-        gameState.lives--;
-        updateUI(); // 생명 UI 업데이트 추가
-        if (gameState.lives <= 0) {
-            gameOver();
-        } else {
-            resetBall();
+    // 모든 공 업데이트
+    for (let i = gameState.balls.length - 1; i >= 0; i--) {
+        const ball = gameState.balls[i];
+        ball.x += ball.dx;
+        ball.y += ball.dy;
+        
+        // 벽 충돌
+        if (ball.x <= ball.radius || ball.x >= gameState.canvas.width - ball.radius) {
+            ball.dx = -ball.dx;
+        }
+        if (ball.y <= ball.radius) {
+            ball.dy = -ball.dy;
+        }
+        
+        // 바닥에 떨어짐
+        if (ball.y >= gameState.canvas.height) {
+            if (ball === gameState.ball) {
+                // 메인 공만 생명 감소
+                gameState.lives--;
+                updateUI();
+                if (gameState.lives <= 0) {
+                    gameOver();
+                } else {
+                    resetBall();
+                }
+            } else {
+                // 추가 공은 제거
+                gameState.balls.splice(i, 1);
+            }
         }
     }
     
-    // 1단계에서 궤도 가이드 업데이트
+    // 1단계에서 궤도 가이드 업데이트 (메인 공만)
     const config = stageConfig[gameState.currentStage];
     if (config.hasGuide && !config.hasGuideDots) {
         updateTrajectoryGuide();
@@ -786,53 +800,56 @@ function showStageMessage() {
 
 // 충돌 검사
 function checkCollisions() {
-    // 패들과 공 충돌
-    if (gameState.ball.y + gameState.ball.radius >= gameState.paddle.y &&
-        gameState.ball.x >= gameState.paddle.x &&
-        gameState.ball.x <= gameState.paddle.x + gameState.paddle.width &&
-        gameState.ball.dy > 0) {
-        
-        gameState.ball.dy = -Math.abs(gameState.ball.dy);
-        gameState.sounds.paddleHit();
-    }
-    
-    // 벽돌과 공 충돌
-    for (let brick of gameState.bricks) {
-        if (!brick.visible) continue;
-        
-        if (gameState.ball.x + gameState.ball.radius >= brick.x &&
-            gameState.ball.x - gameState.ball.radius <= brick.x + brick.width &&
-            gameState.ball.y + gameState.ball.radius >= brick.y &&
-            gameState.ball.y - gameState.ball.radius <= brick.y + brick.height) {
+    // 모든 공에 대해 충돌 검사
+    for (let ball of gameState.balls) {
+        // 패들과 공 충돌
+        if (ball.y + ball.radius >= gameState.paddle.y &&
+            ball.x >= gameState.paddle.x &&
+            ball.x <= gameState.paddle.x + gameState.paddle.width &&
+            ball.dy > 0) {
             
-            // 강화된 벽돌 처리
-            if (brick.enhanced) {
-                brick.hits--;
-                if (brick.hits <= 0) {
-                    brick.visible = false;
-                    gameState.score += 20; // 강화된 벽돌은 더 많은 점수
+            ball.dy = -Math.abs(ball.dy);
+            gameState.sounds.paddleHit();
+        }
+        
+        // 벽돌과 공 충돌
+        for (let brick of gameState.bricks) {
+            if (!brick.visible) continue;
+            
+            if (ball.x + ball.radius >= brick.x &&
+                ball.x - ball.radius <= brick.x + brick.width &&
+                ball.y + ball.radius >= brick.y &&
+                ball.y - ball.radius <= brick.y + brick.height) {
+                
+                // 강화된 벽돌 처리
+                if (brick.enhanced) {
+                    brick.hits--;
+                    if (brick.hits <= 0) {
+                        brick.visible = false;
+                        gameState.score += 20; // 강화된 벽돌은 더 많은 점수
+                    } else {
+                        gameState.score += 5; // 첫 번째 타격 점수
+                    }
                 } else {
-                    gameState.score += 5; // 첫 번째 타격 점수
+                    brick.visible = false;
+                    gameState.score += 10;
                 }
-            } else {
-                brick.visible = false;
-                gameState.score += 10;
+                
+                updateUI(); // 점수 UI 업데이트 추가
+                gameState.sounds.brickBreak();
+                
+                // 파티클 효과
+                createParticles(brick.x + brick.width/2, brick.y + brick.height/2);
+                
+                // 아이템 생성 (10% 확률)
+                if (Math.random() < 0.1) {
+                    createItem(brick.x + brick.width/2, brick.y + brick.height/2);
+                }
+                
+                // 공 방향 변경
+                ball.dy = -ball.dy;
+                break;
             }
-            
-            updateUI(); // 점수 UI 업데이트 추가
-            gameState.sounds.brickBreak();
-            
-            // 파티클 효과
-            createParticles(brick.x + brick.width/2, brick.y + brick.height/2);
-            
-            // 아이템 생성 (10% 확률)
-            if (Math.random() < 0.1) {
-                createItem(brick.x + brick.width/2, brick.y + brick.height/2);
-            }
-            
-            // 공 방향 변경
-            gameState.ball.dy = -gameState.ball.dy;
-            break;
         }
     }
     
@@ -900,7 +917,12 @@ function applyItemEffect(type) {
     switch (type) {
         case 'multiBall':
             gameState.multiBall = true;
-            setTimeout(() => { gameState.multiBall = false; }, 10000);
+            createMultiBalls(); // 멀티볼 생성
+            setTimeout(() => { 
+                gameState.multiBall = false;
+                // 추가 공들 제거
+                gameState.balls = gameState.balls.filter(ball => ball === gameState.ball);
+            }, 10000);
             break;
         case 'extendPaddle':
             gameState.paddleExtended = true;
@@ -914,6 +936,27 @@ function applyItemEffect(type) {
             gameState.missileMode = true;
             setTimeout(() => { gameState.missileMode = false; }, 10000);
             break;
+    }
+}
+
+// 멀티볼 생성
+function createMultiBalls() {
+    if (!gameState.balls) {
+        gameState.balls = [gameState.ball];
+    }
+    
+    // 기존 공을 기준으로 2개의 추가 공 생성
+    for (let i = 0; i < 2; i++) {
+        const newBall = {
+            x: gameState.ball.x + (i - 1) * 20,
+            y: gameState.ball.y,
+            dx: gameState.ball.dx + (Math.random() - 0.5) * 2,
+            dy: gameState.ball.dy + (Math.random() - 0.5) * 2,
+            radius: gameState.ball.radius,
+            color: gameState.ball.color,
+            baseSpeed: gameState.ball.baseSpeed
+        };
+        gameState.balls.push(newBall);
     }
 }
 
@@ -964,15 +1007,16 @@ function gameOver() {
 
 // 게임 오버 화면
 function showGameOver(won) {
-    const message = won ? '축하합니다! 모든 벽돌을 깨뜨렸습니다!' : '게임 오버!';
-    const finalScore = `최종 점수: ${gameState.score}`;
+    const message = won ? 'STAGE CLEAR!' : 'GAME OVER';
+    const finalScore = `Final Score: ${gameState.score}`;
+    const buttonText = won ? 'Next Stage' : 'Restart';
     
     const gameOverDiv = document.createElement('div');
     gameOverDiv.className = 'game-over';
     gameOverDiv.innerHTML = `
         <h2>${message}</h2>
         <p>${finalScore}</p>
-        <button onclick="restartGame()">다시 시작</button>
+        <button onclick="restartGame()">${buttonText}</button>
     `;
     
     document.body.appendChild(gameOverDiv);
@@ -984,9 +1028,11 @@ function restartGame() {
     gameState.lives = 5;
     gameState.gameOver = false;
     gameState.gameRunning = true;
+    gameState.currentStage = 1;
     gameState.items = [];
     gameState.missiles = [];
     gameState.particles = [];
+    gameState.balls = [];
     gameState.multiBall = false;
     gameState.paddleExtended = false;
     gameState.missileMode = false;
@@ -1014,13 +1060,15 @@ function draw() {
     gameState.ctx.fillStyle = '#1a1a1a';
     gameState.ctx.fillRect(0, 0, gameState.canvas.width, gameState.canvas.height);
     
-    // 공 그리기
-    gameState.ctx.beginPath();
-    gameState.ctx.arc(gameState.ball.x, gameState.ball.y, gameState.ball.radius, 0, Math.PI * 2);
-    gameState.ctx.fillStyle = gameState.ball.color;
-    gameState.ctx.fill();
-    gameState.ctx.shadowBlur = 10;
-    gameState.ctx.shadowColor = gameState.ball.color;
+    // 모든 공 그리기
+    for (let ball of gameState.balls) {
+        gameState.ctx.beginPath();
+        gameState.ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        gameState.ctx.fillStyle = ball.color;
+        gameState.ctx.fill();
+        gameState.ctx.shadowBlur = 10;
+        gameState.ctx.shadowColor = ball.color;
+    }
     
     // 패들 그리기
     gameState.ctx.fillStyle = gameState.paddle.color;
