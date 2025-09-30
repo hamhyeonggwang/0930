@@ -33,7 +33,11 @@ const gameState = {
     // 설정
     gameSpeed: 1.0,
     soundVolume: 0.5,
-    soundEnabled: true
+    soundEnabled: true,
+    
+    // 보조 기능
+    slowMode: false,
+    slowModeMultiplier: 0.5
 };
 
 // 단계별 설정
@@ -632,8 +636,9 @@ function updateBall() {
     // 모든 공 업데이트
     for (let i = gameState.balls.length - 1; i >= 0; i--) {
         const ball = gameState.balls[i];
-        ball.x += ball.dx * gameState.gameSpeed;
-        ball.y += ball.dy * gameState.gameSpeed;
+        const speedMultiplier = gameState.slowMode ? gameState.slowModeMultiplier : 1.0;
+        ball.x += ball.dx * gameState.gameSpeed * speedMultiplier;
+        ball.y += ball.dy * gameState.gameSpeed * speedMultiplier;
         
         // 벽 충돌
         if (ball.x <= ball.radius || ball.x >= gameState.canvas.width - ball.radius) {
@@ -1198,6 +1203,20 @@ document.addEventListener('keydown', (e) => {
             }
         }
     }
+    
+    // 컨트롤 키로 슬로우 모드 활성화
+    if (e.ctrlKey && gameState.gameRunning && !gameState.gameOver) {
+        gameState.slowMode = true;
+        showSlowModeIndicator();
+    }
+});
+
+document.addEventListener('keyup', (e) => {
+    // 컨트롤 키를 놓으면 슬로우 모드 해제
+    if (e.key === 'Control' && gameState.gameRunning && !gameState.gameOver) {
+        gameState.slowMode = false;
+        hideSlowModeIndicator();
+    }
 });
 
 // 일시정지 메시지 표시
@@ -1233,6 +1252,39 @@ function hidePauseMessage() {
     const message = document.getElementById('pause-message');
     if (message) {
         message.remove();
+    }
+}
+
+// 슬로우 모드 표시
+function showSlowModeIndicator() {
+    const indicator = document.createElement('div');
+    indicator.id = 'slow-mode-indicator';
+    indicator.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 16px;
+            z-index: 1000;
+            border: 2px solid #3498db;
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.6);
+        ">
+            🐌 슬로우 모드 활성화 (Ctrl 키 누름)
+        </div>
+    `;
+    document.body.appendChild(indicator);
+}
+
+// 슬로우 모드 숨기기
+function hideSlowModeIndicator() {
+    const indicator = document.getElementById('slow-mode-indicator');
+    if (indicator) {
+        indicator.remove();
     }
 }
 
