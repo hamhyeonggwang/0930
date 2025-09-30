@@ -37,7 +37,10 @@ const gameState = {
     
     // 보조 기능
     slowMode: false,
-    slowModeMultiplier: 0.5
+    slowModeMultiplier: 0.5,
+    
+    // 게임 모드
+    gameMode: 'normal', // 'normal' 또는 'side'
 };
 
 // 단계별 설정
@@ -153,24 +156,73 @@ function initBricks() {
     
     const config = stageConfig[gameState.currentStage];
     const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22', '#e91e63', '#00bcd4'];
-    const cols = 10;
-    const brickWidth = 70;
-    const brickHeight = 25;
-    const padding = 5;
-    const offsetTop = 100; // 1단계에서 벽돌을 아래로 이동
-    const offsetLeft = (gameState.canvas.width - (cols * (brickWidth + padding) - padding)) / 2;
     
-    // 가이드라인 생성
-    if (config.hasGuide) {
-        createGuideLines(offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding);
+    if (gameState.gameMode === 'side') {
+        // 사이드 모드: 벽돌을 좌/우에 배치
+        createSideModeBricks(config, colors);
+    } else {
+        // 일반 모드: 기존 방식
+        const cols = 10;
+        const brickWidth = 70;
+        const brickHeight = 25;
+        const padding = 5;
+        const offsetTop = 100;
+        const offsetLeft = (gameState.canvas.width - (cols * (brickWidth + padding) - padding)) / 2;
+        
+        // 가이드라인 생성
+        if (config.hasGuide) {
+            createGuideLines(offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding);
+        }
+        
+        // 벽돌 패턴에 따라 생성
+        createBrickPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding);
     }
-    
-    // 벽돌 패턴에 따라 생성
-    createBrickPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding);
     
     // 자기장 생성 (6단계 이상)
     if (config.magneticFields) {
         createMagneticFields();
+    }
+}
+
+// 사이드 모드 벽돌 생성
+function createSideModeBricks(config, colors) {
+    const brickWidth = 25;
+    const brickHeight = 70;
+    const padding = 5;
+    const enhancedBrickChance = Math.min(0.1 + (gameState.currentStage - 5) * 0.05, 0.4);
+    
+    // 왼쪽 벽돌들
+    for (let r = 0; r < config.rows; r++) {
+        for (let c = 0; c < 3; c++) {
+            const isEnhanced = Math.random() < enhancedBrickChance;
+            gameState.bricks.push({
+                x: 50 + c * (brickWidth + padding),
+                y: 100 + r * (brickHeight + padding),
+                width: brickWidth,
+                height: brickHeight,
+                color: colors[r % colors.length],
+                visible: true,
+                enhanced: isEnhanced,
+                hits: isEnhanced ? 2 : 1
+            });
+        }
+    }
+    
+    // 오른쪽 벽돌들
+    for (let r = 0; r < config.rows; r++) {
+        for (let c = 0; c < 3; c++) {
+            const isEnhanced = Math.random() < enhancedBrickChance;
+            gameState.bricks.push({
+                x: gameState.canvas.width - 50 - (c + 1) * (brickWidth + padding),
+                y: 100 + r * (brickHeight + padding),
+                width: brickWidth,
+                height: brickHeight,
+                color: colors[r % colors.length],
+                visible: true,
+                enhanced: isEnhanced,
+                hits: isEnhanced ? 2 : 1
+            });
+        }
     }
 }
 
@@ -1333,12 +1385,17 @@ function loadSettings() {
         gameState.gameSpeed = settings.gameSpeed || 1.0;
         gameState.soundVolume = settings.soundVolume || 0.5;
         gameState.soundEnabled = settings.soundEnabled !== false;
+        gameState.gameMode = settings.gameMode || 'normal';
     }
     
     // UI 업데이트
     document.getElementById('gameSpeed').value = gameState.gameSpeed;
     document.getElementById('soundVolume').value = gameState.soundVolume;
     document.getElementById('soundEnabled').checked = gameState.soundEnabled;
+    
+    // 모드 버튼 상태 업데이트
+    document.getElementById('normalModeBtn').classList.toggle('active', gameState.gameMode === 'normal');
+    document.getElementById('sideModeBtn').classList.toggle('active', gameState.gameMode === 'side');
     
     updateSettingValues();
 }
@@ -1376,6 +1433,26 @@ function resetSettings() {
 function updateSettingValues() {
     document.getElementById('speedValue').textContent = gameState.gameSpeed.toFixed(1) + 'x';
     document.getElementById('volumeValue').textContent = Math.round(gameState.soundVolume * 100) + '%';
+}
+
+// 게임 모드 변경
+function changeGameMode(mode) {
+    gameState.gameMode = mode;
+    
+    // 버튼 상태 업데이트
+    document.getElementById('normalModeBtn').classList.toggle('active', mode === 'normal');
+    document.getElementById('sideModeBtn').classList.toggle('active', mode === 'side');
+    
+    restartGame();
+    
+    // 설정 저장
+    const settings = {
+        gameSpeed: gameState.gameSpeed,
+        soundVolume: gameState.soundVolume,
+        soundEnabled: gameState.soundEnabled,
+        gameMode: gameState.gameMode
+    };
+    localStorage.setItem('brickBreakerSettings', JSON.stringify(settings));
 }
 
 // 설정 이벤트 리스너
