@@ -164,30 +164,36 @@ function initBricks() {
 function createGuideLines(offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding) {
     const config = stageConfig[gameState.currentStage];
     
-    // 수직 가이드라인
-    for (let c = 0; c <= cols; c++) {
-        gameState.guideLines.push({
-            type: 'vertical',
-            x: offsetLeft + c * (brickWidth + padding),
-            y: offsetTop,
-            endY: offsetTop + config.rows * (brickHeight + padding),
-            color: 'rgba(255, 255, 255, 0.3)'
-        });
+    // 1단계: 공의 이동 궤도 예측선
+    if (config.hasGuide && !config.hasGuideDots) {
+        createBallTrajectoryGuide();
     }
     
-    // 수평 가이드라인
-    for (let r = 0; r <= config.rows; r++) {
-        gameState.guideLines.push({
-            type: 'horizontal',
-            y: offsetTop + r * (brickHeight + padding),
-            x: offsetLeft,
-            endX: offsetLeft + cols * (brickWidth + padding),
-            color: 'rgba(255, 255, 255, 0.3)'
-        });
-    }
-    
-    // 가이드 점 생성 (2단계)
-    if (config.hasGuideDots) {
+    // 2단계: 벽돌 배치 가이드 + 위치점
+    if (config.hasGuide && config.hasGuideDots) {
+        // 수직 가이드라인
+        for (let c = 0; c <= cols; c++) {
+            gameState.guideLines.push({
+                type: 'vertical',
+                x: offsetLeft + c * (brickWidth + padding),
+                y: offsetTop,
+                endY: offsetTop + config.rows * (brickHeight + padding),
+                color: 'rgba(255, 255, 255, 0.3)'
+            });
+        }
+        
+        // 수평 가이드라인
+        for (let r = 0; r <= config.rows; r++) {
+            gameState.guideLines.push({
+                type: 'horizontal',
+                y: offsetTop + r * (brickHeight + padding),
+                x: offsetLeft,
+                endX: offsetLeft + cols * (brickWidth + padding),
+                color: 'rgba(255, 255, 255, 0.3)'
+            });
+        }
+        
+        // 가이드 점 생성
         for (let r = 0; r < config.rows; r++) {
             for (let c = 0; c < cols; c++) {
                 gameState.guideLines.push({
@@ -199,6 +205,57 @@ function createGuideLines(offsetTop, offsetLeft, cols, brickWidth, brickHeight, 
                 });
             }
         }
+    }
+}
+
+// 공의 궤도 예측 가이드 생성
+function createBallTrajectoryGuide() {
+    const ball = gameState.ball;
+    const trajectory = [];
+    let x = ball.x;
+    let y = ball.y;
+    let dx = ball.dx;
+    let dy = ball.dy;
+    
+    // 공의 궤도를 50프레임 앞까지 예측
+    for (let i = 0; i < 50; i++) {
+        x += dx;
+        y += dy;
+        
+        // 벽 충돌 처리
+        if (x <= ball.radius || x >= gameState.canvas.width - ball.radius) {
+            dx = -dx;
+        }
+        if (y <= ball.radius) {
+            dy = -dy;
+        }
+        
+        // 패들 충돌 처리 (예측)
+        if (y + ball.radius >= gameState.paddle.y &&
+            x >= gameState.paddle.x &&
+            x <= gameState.paddle.x + gameState.paddle.width &&
+            dy > 0) {
+            dy = -Math.abs(dy);
+        }
+        
+        trajectory.push({ x, y });
+        
+        // 바닥에 닿으면 중단
+        if (y >= gameState.canvas.height) {
+            break;
+        }
+    }
+    
+    // 궤도 점들을 가이드라인에 추가
+    for (let i = 0; i < trajectory.length; i += 3) { // 3프레임마다 점 표시
+        const point = trajectory[i];
+        gameState.guideLines.push({
+            type: 'trajectory',
+            x: point.x,
+            y: point.y,
+            radius: 2,
+            color: `rgba(255, 255, 255, ${0.8 - (i / trajectory.length) * 0.6})` // 점점 투명해짐
+        });
     }
 }
 
@@ -581,6 +638,21 @@ function updateBall() {
             resetBall();
         }
     }
+    
+    // 1단계에서 궤도 가이드 업데이트
+    const config = stageConfig[gameState.currentStage];
+    if (config.hasGuide && !config.hasGuideDots) {
+        updateTrajectoryGuide();
+    }
+}
+
+// 궤도 가이드 업데이트
+function updateTrajectoryGuide() {
+    // 기존 궤도 가이드 제거
+    gameState.guideLines = gameState.guideLines.filter(guide => guide.type !== 'trajectory');
+    
+    // 새로운 궤도 가이드 생성
+    createBallTrajectoryGuide();
 }
 
 // 공 리셋
@@ -956,16 +1028,24 @@ function draw() {
     
     // 가이드라인 그리기
     for (let guide of gameState.guideLines) {
-        gameState.ctx.strokeStyle = guide.color;
-        gameState.ctx.lineWidth = 1;
-        gameState.ctx.setLineDash([5, 5]);
-        
-        if (guide.type === 'vertical') {
+        if (guide.type === 'trajectory') {
+            // 공의 궤도 예측 점들
+            gameState.ctx.fillStyle = guide.color;
+            gameState.ctx.beginPath();
+            gameState.ctx.arc(guide.x, guide.y, guide.radius, 0, Math.PI * 2);
+            gameState.ctx.fill();
+        } else if (guide.type === 'vertical') {
+            gameState.ctx.strokeStyle = guide.color;
+            gameState.ctx.lineWidth = 1;
+            gameState.ctx.setLineDash([5, 5]);
             gameState.ctx.beginPath();
             gameState.ctx.moveTo(guide.x, guide.y);
             gameState.ctx.lineTo(guide.x, guide.endY);
             gameState.ctx.stroke();
         } else if (guide.type === 'horizontal') {
+            gameState.ctx.strokeStyle = guide.color;
+            gameState.ctx.lineWidth = 1;
+            gameState.ctx.setLineDash([5, 5]);
             gameState.ctx.beginPath();
             gameState.ctx.moveTo(guide.x, guide.y);
             gameState.ctx.lineTo(guide.endX, guide.y);
