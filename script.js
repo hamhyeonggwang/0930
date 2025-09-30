@@ -1211,18 +1211,21 @@ function draw() {
 
 // 키보드 이벤트
 document.addEventListener('keydown', (e) => {
+    // 스페이스바: 미사일 발사 (미사일 모드일 때만)
     if (e.code === 'Space') {
+        if (gameState.gameRunning && !gameState.gameOver && gameState.missileMode) {
+            fireMissile();
+        }
+    }
+    
+    // 시프트 키: 일시정지 토글
+    if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
         if (gameState.gameRunning && !gameState.gameOver) {
-            if (gameState.missileMode) {
-                fireMissile();
+            gameState.paused = !gameState.paused;
+            if (gameState.paused) {
+                showPauseMessage();
             } else {
-                // 일시정지 토글
-                gameState.paused = !gameState.paused;
-                if (gameState.paused) {
-                    showPauseMessage();
-                } else {
-                    hidePauseMessage();
-                }
+                hidePauseMessage();
             }
         }
     }
@@ -1248,7 +1251,7 @@ function showPauseMessage() {
     message.id = 'pause-message';
     message.innerHTML = `
         <h2>일시정지</h2>
-        <p>스페이스바를 눌러 계속하세요</p>
+        <p>시프트 키를 눌러 계속하세요</p>
     `;
     message.style.cssText = `
         position: absolute;
