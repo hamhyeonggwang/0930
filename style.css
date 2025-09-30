@@ -1,0 +1,178 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: #ecf0f1;
+    overflow: hidden;
+    height: 100vh;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    width: 800px;
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.score, .lives {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 2px solid #3498db;
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+}
+
+#gameCanvas {
+    border: 3px solid #3498db;
+    border-radius: 10px;
+    background: #1a1a1a;
+    box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+    cursor: none;
+}
+
+.game-controls {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.joystick-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.joystick {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #34495e, #2c3e50);
+    border: 3px solid #3498db;
+    position: relative;
+    box-shadow: 0 0 15px rgba(52, 152, 219, 0.4);
+}
+
+.joystick-knob {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #e74c3c, #c0392b);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px solid #fff;
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.6);
+    transition: all 0.1s ease;
+}
+
+.game-info {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.game-info p {
+    margin: 5px 0;
+}
+
+/* 벽돌 색상 클래스들 */
+.brick-red { background: linear-gradient(45deg, #e74c3c, #c0392b); }
+.brick-blue { background: linear-gradient(45deg, #3498db, #2980b9); }
+.brick-green { background: linear-gradient(45deg, #2ecc71, #27ae60); }
+.brick-yellow { background: linear-gradient(45deg, #f1c40f, #f39c12); }
+.brick-purple { background: linear-gradient(45deg, #9b59b6, #8e44ad); }
+.brick-orange { background: linear-gradient(45deg, #e67e22, #d35400); }
+.brick-pink { background: linear-gradient(45deg, #e91e63, #c2185b); }
+.brick-cyan { background: linear-gradient(45deg, #00bcd4, #0097a7); }
+
+/* 아이템 효과 애니메이션 */
+@keyframes itemGlow {
+    0% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); }
+    100% { box-shadow: 0 0 5px rgba(255, 255, 255, 0.5); }
+}
+
+.item {
+    animation: itemGlow 1s infinite;
+}
+
+/* 게임 오버 스타일 */
+.game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: #e74c3c;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    border: 3px solid #e74c3c;
+    box-shadow: 0 0 30px rgba(231, 76, 60, 0.8);
+    z-index: 1000;
+}
+
+/* 미사일 효과 */
+.missile {
+    background: linear-gradient(90deg, #ff6b6b, #ff8e8e);
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.8);
+}
+
+/* 파티클 효과 */
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #fff;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 900px) {
+    .game-header {
+        width: 100%;
+        max-width: 800px;
+    }
+    
+    #gameCanvas {
+        width: 100%;
+        max-width: 800px;
+        height: auto;
+    }
+    
+    .joystick-container {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .joystick {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .joystick-knob {
+        width: 35px;
+        height: 35px;
+    }
+}

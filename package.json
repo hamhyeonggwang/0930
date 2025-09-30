@@ -1,0 +1,33 @@
+{
+  "name": "brick-breaker-game",
+  "version": "1.0.0",
+  "description": "A classic brick breaker game built with HTML5 Canvas and JavaScript",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "dev": "python -m http.server 8000",
+    "build": "echo 'No build process needed for static files'",
+    "deploy": "echo 'Deploy to GitHub Pages'"
+  },
+  "keywords": [
+    "game",
+    "brick-breaker",
+    "html5",
+    "canvas",
+    "javascript",
+    "arcade",
+    "retro"
+  ],
+  "author": "AI Assistant",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/brick-breaker-game.git"
+  },
+  "homepage": "https://username.github.io/brick-breaker-game",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}
