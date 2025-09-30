@@ -123,6 +123,87 @@ body {
     box-shadow: 0 6px 20px rgba(52, 152, 219, 0.6);
 }
 
+/* 모드 선택 */
+.mode-selection {
+    margin: 40px 0;
+}
+
+.mode-selection h3 {
+    color: #3498db;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+}
+
+.mode-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.mode-select-btn {
+    background: rgba(52, 152, 219, 0.1);
+    border: 2px solid #3498db;
+    border-radius: 15px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 200px;
+    text-align: center;
+    color: #ecf0f1;
+}
+
+.mode-select-btn:hover {
+    background: rgba(52, 152, 219, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+}
+
+.mode-select-btn.selected {
+    background: rgba(46, 204, 113, 0.2);
+    border-color: #2ecc71;
+    box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
+}
+
+.mode-select-btn.selected:hover {
+    background: rgba(46, 204, 113, 0.3);
+    box-shadow: 0 8px 25px rgba(46, 204, 113, 0.5);
+}
+
+.mode-icon {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.mode-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #3498db;
+}
+
+.mode-select-btn.selected .mode-title {
+    color: #2ecc71;
+}
+
+.mode-desc {
+    font-size: 0.9em;
+    color: #bdc3c7;
+}
+
+.start-btn:disabled {
+    background: #7f8c8d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.start-btn:disabled:hover {
+    background: #7f8c8d;
+    transform: none;
+    box-shadow: none;
+}
+
 .game-container {
     display: flex;
     flex-direction: column;

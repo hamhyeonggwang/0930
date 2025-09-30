@@ -28,8 +28,24 @@
                 </div>
             </div>
             
+            <div class="mode-selection">
+                <h3>🎮 게임 모드 선택</h3>
+                <div class="mode-buttons">
+                    <button onclick="selectMode('normal')" class="mode-select-btn" id="startNormalBtn">
+                        <div class="mode-icon">📱</div>
+                        <div class="mode-title">일반 모드</div>
+                        <div class="mode-desc">클래식한 벽돌깨기</div>
+                    </button>
+                    <button onclick="selectMode('side')" class="mode-select-btn" id="startSideBtn">
+                        <div class="mode-icon">🔄</div>
+                        <div class="mode-title">사이드 모드</div>
+                        <div class="mode-desc">좌/우 벽돌을 옆에서 깨기</div>
+                    </button>
+                </div>
+            </div>
+            
             <div class="start-buttons">
-                <button onclick="startGame()" class="start-btn">게임 시작</button>
+                <button onclick="startGame()" class="start-btn" id="startGameBtn" disabled>게임 시작</button>
                 <button onclick="showTutorial()" class="tutorial-btn">게임 방법</button>
             </div>
         </div>

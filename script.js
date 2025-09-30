@@ -1456,8 +1456,28 @@ function changeGameMode(mode) {
 }
 
 // 설정 이벤트 리스너
+// 모드 선택
+function selectMode(mode) {
+    gameState.gameMode = mode;
+    
+    // 버튼 상태 업데이트
+    document.getElementById('startNormalBtn').classList.toggle('selected', mode === 'normal');
+    document.getElementById('startSideBtn').classList.toggle('selected', mode === 'side');
+    
+    // 게임 시작 버튼 활성화
+    document.getElementById('startGameBtn').disabled = false;
+    
+    // 설정 저장
+    saveSettings();
+}
+
 // 게임 시작
 function startGame() {
+    if (!gameState.gameMode) {
+        alert('게임 모드를 먼저 선택해주세요!');
+        return;
+    }
+    
     document.getElementById('startScreen').style.display = 'none';
     document.getElementById('gameContainer').style.display = 'flex';
     initGame();
@@ -1536,4 +1556,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('soundEnabled').addEventListener('change', (e) => {
         gameState.soundEnabled = e.target.checked;
     });
+    
+    // 저장된 모드 불러오기
+    loadSettings();
+    const savedMode = gameState.gameMode;
+    if (savedMode) {
+        selectMode(savedMode);
+    }
 });
