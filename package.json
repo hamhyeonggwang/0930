@@ -6,8 +6,8 @@
   "scripts": {
     "start": "python -m http.server 8000",
     "dev": "python -m http.server 8000",
-    "build": "echo 'No build process needed for static files'",
-    "deploy": "echo 'Deploy to GitHub Pages'"
+    "build": "echo 'Static files ready for deployment'",
+    "deploy": "echo 'Deploy to Vercel'"
   },
   "keywords": [
     "game",
