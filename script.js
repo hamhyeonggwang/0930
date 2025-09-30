@@ -6,6 +6,9 @@ const gameState = {
     lives: 5,
     gameRunning: true,
     gameOver: false,
+    paused: false,
+    currentStage: 1,
+    maxStage: 10,
     
     // 게임 객체들
     ball: null,
@@ -14,6 +17,8 @@ const gameState = {
     items: [],
     missiles: [],
     particles: [],
+    magneticFields: [],
+    guideLines: [],
     
     // 아이템 효과
     multiBall: false,
@@ -23,6 +28,20 @@ const gameState = {
     // 사운드
     audioContext: null,
     sounds: {}
+};
+
+// 단계별 설정
+const stageConfig = {
+    1: { rows: 2, speed: 1, hasGuide: true, hasGuideDots: false, pattern: 'normal' },
+    2: { rows: 3, speed: 2, hasGuide: true, hasGuideDots: true, pattern: 'normal' },
+    3: { rows: 4, speed: 2, hasGuide: false, hasGuideDots: false, pattern: 'normal' },
+    4: { rows: 5, speed: 3, hasGuide: false, hasGuideDots: false, pattern: 'normal' },
+    5: { rows: 5, speed: 3, hasGuide: false, hasGuideDots: false, pattern: 'inverse_pyramid' },
+    6: { rows: 6, speed: 4, hasGuide: false, hasGuideDots: false, pattern: 'hourglass', magneticFields: true },
+    7: { rows: 7, speed: 4, hasGuide: false, hasGuideDots: false, pattern: 'spiral', magneticFields: true },
+    8: { rows: 8, speed: 5, hasGuide: false, hasGuideDots: false, pattern: 'zigzag', magneticFields: true },
+    9: { rows: 9, speed: 5, hasGuide: false, hasGuideDots: false, pattern: 'maze', magneticFields: true },
+    10: { rows: 10, speed: 6, hasGuide: false, hasGuideDots: false, pattern: 'chaos', magneticFields: true }
 };
 
 // 게임 초기화
@@ -85,13 +104,17 @@ function createTone(frequency, duration, type = 'sine') {
 
 // 공 초기화
 function initBall() {
+    const config = stageConfig[gameState.currentStage];
+    const baseSpeed = config.speed;
+    
     gameState.ball = {
         x: gameState.canvas.width / 2,
         y: gameState.canvas.height - 100,
-        dx: 4,
-        dy: -4,
+        dx: baseSpeed,
+        dy: -baseSpeed,
         radius: 8,
-        color: '#fff'
+        color: '#fff',
+        baseSpeed: baseSpeed
     };
 }
 
@@ -111,8 +134,11 @@ function initPaddle() {
 // 벽돌 초기화
 function initBricks() {
     gameState.bricks = [];
+    gameState.guideLines = [];
+    gameState.magneticFields = [];
+    
+    const config = stageConfig[gameState.currentStage];
     const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22', '#e91e63', '#00bcd4'];
-    const rows = 8;
     const cols = 10;
     const brickWidth = 70;
     const brickHeight = 25;
@@ -120,17 +146,307 @@ function initBricks() {
     const offsetTop = 50;
     const offsetLeft = (gameState.canvas.width - (cols * (brickWidth + padding) - padding)) / 2;
     
-    for (let r = 0; r < rows; r++) {
+    // 가이드라인 생성
+    if (config.hasGuide) {
+        createGuideLines(offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding);
+    }
+    
+    // 벽돌 패턴에 따라 생성
+    createBrickPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding);
+    
+    // 자기장 생성 (6단계 이상)
+    if (config.magneticFields) {
+        createMagneticFields();
+    }
+}
+
+// 가이드라인 생성
+function createGuideLines(offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding) {
+    const config = stageConfig[gameState.currentStage];
+    
+    // 수직 가이드라인
+    for (let c = 0; c <= cols; c++) {
+        gameState.guideLines.push({
+            type: 'vertical',
+            x: offsetLeft + c * (brickWidth + padding),
+            y: offsetTop,
+            endY: offsetTop + config.rows * (brickHeight + padding),
+            color: 'rgba(255, 255, 255, 0.3)'
+        });
+    }
+    
+    // 수평 가이드라인
+    for (let r = 0; r <= config.rows; r++) {
+        gameState.guideLines.push({
+            type: 'horizontal',
+            y: offsetTop + r * (brickHeight + padding),
+            x: offsetLeft,
+            endX: offsetLeft + cols * (brickWidth + padding),
+            color: 'rgba(255, 255, 255, 0.3)'
+        });
+    }
+    
+    // 가이드 점 생성 (2단계)
+    if (config.hasGuideDots) {
+        for (let r = 0; r < config.rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                gameState.guideLines.push({
+                    type: 'dot',
+                    x: offsetLeft + c * (brickWidth + padding) + brickWidth/2,
+                    y: offsetTop + r * (brickHeight + padding) + brickHeight/2,
+                    radius: 3,
+                    color: 'rgba(255, 255, 255, 0.6)'
+                });
+            }
+        }
+    }
+}
+
+// 벽돌 패턴 생성
+function createBrickPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding) {
+    const enhancedBrickChance = Math.min(0.1 + (gameState.currentStage - 5) * 0.05, 0.4);
+    
+    switch (config.pattern) {
+        case 'normal':
+            createNormalPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedBrickChance);
+            break;
+        case 'inverse_pyramid':
+            createInversePyramidPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedBrickChance);
+            break;
+        case 'hourglass':
+            createHourglassPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedBrickChance);
+            break;
+        case 'spiral':
+            createSpiralPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedBrickChance);
+            break;
+        case 'zigzag':
+            createZigzagPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedBrickChance);
+            break;
+        case 'maze':
+            createMazePattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedBrickChance);
+            break;
+        case 'chaos':
+            createChaosPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedBrickChance);
+            break;
+    }
+}
+
+// 일반 패턴
+function createNormalPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedChance) {
+    for (let r = 0; r < config.rows; r++) {
         for (let c = 0; c < cols; c++) {
+            const isEnhanced = Math.random() < enhancedChance;
             gameState.bricks.push({
                 x: offsetLeft + c * (brickWidth + padding),
                 y: offsetTop + r * (brickHeight + padding),
                 width: brickWidth,
                 height: brickHeight,
                 color: colors[r % colors.length],
-                visible: true
+                visible: true,
+                enhanced: isEnhanced,
+                hits: isEnhanced ? 2 : 1
             });
         }
+    }
+}
+
+// 역 피라미드 패턴
+function createInversePyramidPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedChance) {
+    for (let r = 0; r < config.rows; r++) {
+        const startCol = Math.floor((cols - (r + 1)) / 2);
+        const endCol = startCol + (r + 1);
+        
+        for (let c = startCol; c < endCol; c++) {
+            const isEnhanced = Math.random() < enhancedChance;
+            gameState.bricks.push({
+                x: offsetLeft + c * (brickWidth + padding),
+                y: offsetTop + r * (brickHeight + padding),
+                width: brickWidth,
+                height: brickHeight,
+                color: colors[r % colors.length],
+                visible: true,
+                enhanced: isEnhanced,
+                hits: isEnhanced ? 2 : 1
+            });
+        }
+    }
+}
+
+// 모래시계 패턴
+function createHourglassPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedChance) {
+    const midRow = Math.floor(config.rows / 2);
+    
+    for (let r = 0; r < config.rows; r++) {
+        let startCol, endCol;
+        
+        if (r <= midRow) {
+            // 위쪽: 역 피라미드
+            startCol = Math.floor((cols - (r + 1)) / 2);
+            endCol = startCol + (r + 1);
+        } else {
+            // 아래쪽: 피라미드
+            const reverseR = config.rows - 1 - r;
+            startCol = Math.floor((cols - (reverseR + 1)) / 2);
+            endCol = startCol + (reverseR + 1);
+        }
+        
+        for (let c = startCol; c < endCol; c++) {
+            const isEnhanced = Math.random() < enhancedChance;
+            gameState.bricks.push({
+                x: offsetLeft + c * (brickWidth + padding),
+                y: offsetTop + r * (brickHeight + padding),
+                width: brickWidth,
+                height: brickHeight,
+                color: colors[r % colors.length],
+                visible: true,
+                enhanced: isEnhanced,
+                hits: isEnhanced ? 2 : 1
+            });
+        }
+    }
+}
+
+// 나선 패턴
+function createSpiralPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedChance) {
+    const centerX = cols / 2;
+    const centerY = config.rows / 2;
+    const positions = [];
+    
+    for (let r = 0; r < config.rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const distance = Math.sqrt((c - centerX) ** 2 + (r - centerY) ** 2);
+            if (distance <= config.rows / 2) {
+                positions.push({ r, c, distance });
+            }
+        }
+    }
+    
+    positions.sort((a, b) => a.distance - b.distance);
+    
+    positions.forEach((pos, index) => {
+        const isEnhanced = Math.random() < enhancedChance;
+        gameState.bricks.push({
+            x: offsetLeft + pos.c * (brickWidth + padding),
+            y: offsetTop + pos.r * (brickHeight + padding),
+            width: brickWidth,
+            height: brickHeight,
+            color: colors[pos.r % colors.length],
+            visible: true,
+            enhanced: isEnhanced,
+            hits: isEnhanced ? 2 : 1
+        });
+    });
+}
+
+// 지그재그 패턴
+function createZigzagPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedChance) {
+    for (let r = 0; r < config.rows; r++) {
+        const startCol = r % 2 === 0 ? 0 : 1;
+        for (let c = startCol; c < cols; c += 2) {
+            const isEnhanced = Math.random() < enhancedChance;
+            gameState.bricks.push({
+                x: offsetLeft + c * (brickWidth + padding),
+                y: offsetTop + r * (brickHeight + padding),
+                width: brickWidth,
+                height: brickHeight,
+                color: colors[r % colors.length],
+                visible: true,
+                enhanced: isEnhanced,
+                hits: isEnhanced ? 2 : 1
+            });
+        }
+    }
+}
+
+// 미로 패턴
+function createMazePattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedChance) {
+    const maze = generateMaze(config.rows, cols);
+    
+    for (let r = 0; r < config.rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            if (maze[r][c] === 1) {
+                const isEnhanced = Math.random() < enhancedChance;
+                gameState.bricks.push({
+                    x: offsetLeft + c * (brickWidth + padding),
+                    y: offsetTop + r * (brickHeight + padding),
+                    width: brickWidth,
+                    height: brickHeight,
+                    color: colors[r % colors.length],
+                    visible: true,
+                    enhanced: isEnhanced,
+                    hits: isEnhanced ? 2 : 1
+                });
+            }
+        }
+    }
+}
+
+// 혼돈 패턴
+function createChaosPattern(config, colors, offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding, enhancedChance) {
+    for (let r = 0; r < config.rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            if (Math.random() < 0.7) { // 70% 확률로 벽돌 생성
+                const isEnhanced = Math.random() < enhancedChance;
+                gameState.bricks.push({
+                    x: offsetLeft + c * (brickWidth + padding),
+                    y: offsetTop + r * (brickHeight + padding),
+                    width: brickWidth,
+                    height: brickHeight,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    visible: true,
+                    enhanced: isEnhanced,
+                    hits: isEnhanced ? 2 : 1
+                });
+            }
+        }
+    }
+}
+
+// 미로 생성 알고리즘
+function generateMaze(rows, cols) {
+    const maze = Array(rows).fill().map(() => Array(cols).fill(0));
+    
+    // 외곽 벽 생성
+    for (let r = 0; r < rows; r++) {
+        maze[r][0] = 1;
+        maze[r][cols-1] = 1;
+    }
+    for (let c = 0; c < cols; c++) {
+        maze[0][c] = 1;
+        maze[rows-1][c] = 1;
+    }
+    
+    // 내부 패턴 생성
+    for (let r = 1; r < rows - 1; r += 2) {
+        for (let c = 1; c < cols - 1; c += 2) {
+            if (Math.random() < 0.6) {
+                maze[r][c] = 1;
+                // 연결된 벽 추가
+                if (Math.random() < 0.5 && c + 1 < cols - 1) {
+                    maze[r][c + 1] = 1;
+                }
+                if (Math.random() < 0.5 && r + 1 < rows - 1) {
+                    maze[r + 1][c] = 1;
+                }
+            }
+        }
+    }
+    
+    return maze;
+}
+
+// 자기장 생성
+function createMagneticFields() {
+    const fieldCount = Math.min(3 + gameState.currentStage - 6, 8);
+    
+    for (let i = 0; i < fieldCount; i++) {
+        gameState.magneticFields.push({
+            x: Math.random() * (gameState.canvas.width - 100) + 50,
+            y: Math.random() * (gameState.canvas.height - 200) + 100,
+            radius: 60 + Math.random() * 40,
+            strength: 0.5 + Math.random() * 0.5,
+            type: Math.random() < 0.5 ? 'attract' : 'repel'
+        });
     }
 }
 
@@ -230,14 +546,16 @@ function gameLoop() {
 
 // 게임 업데이트
 function update() {
-    if (gameState.gameOver) return;
+    if (gameState.gameOver || gameState.paused) return;
     
     updateBall();
     updateItems();
     updateMissiles();
     updateParticles();
+    updateMagneticFields();
     checkCollisions();
     checkGameOver();
+    checkStageComplete();
 }
 
 // 공 업데이트
@@ -311,6 +629,89 @@ function updateParticles() {
     }
 }
 
+// 자기장 업데이트
+function updateMagneticFields() {
+    for (let field of gameState.magneticFields) {
+        const dx = gameState.ball.x - field.x;
+        const dy = gameState.ball.y - field.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < field.radius) {
+            const force = field.strength * (1 - distance / field.radius);
+            const angle = Math.atan2(dy, dx);
+            
+            if (field.type === 'attract') {
+                gameState.ball.dx -= Math.cos(angle) * force * 0.1;
+                gameState.ball.dy -= Math.sin(angle) * force * 0.1;
+            } else {
+                gameState.ball.dx += Math.cos(angle) * force * 0.1;
+                gameState.ball.dy += Math.sin(angle) * force * 0.1;
+            }
+        }
+    }
+}
+
+// 단계 완료 체크
+function checkStageComplete() {
+    const allBricksDestroyed = gameState.bricks.every(brick => !brick.visible);
+    if (allBricksDestroyed) {
+        if (gameState.currentStage < gameState.maxStage) {
+            nextStage();
+        } else {
+            gameState.gameOver = true;
+            gameState.sounds.gameOver();
+            showGameOver(true);
+        }
+    }
+}
+
+// 다음 단계로 진행
+function nextStage() {
+    gameState.currentStage++;
+    gameState.score += 100 * gameState.currentStage; // 단계 보너스
+    updateUI();
+    
+    // 새로운 단계 초기화
+    initBall();
+    initPaddle();
+    initBricks();
+    
+    // 단계 시작 메시지
+    showStageMessage();
+}
+
+// 단계 메시지 표시
+function showStageMessage() {
+    const message = document.createElement('div');
+    message.className = 'stage-message';
+    message.innerHTML = `
+        <h2>Stage ${gameState.currentStage}</h2>
+        <p>준비하세요!</p>
+    `;
+    message.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: #3498db;
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        border: 3px solid #3498db;
+        box-shadow: 0 0 30px rgba(52, 152, 219, 0.8);
+        z-index: 1000;
+    `;
+    
+    document.body.appendChild(message);
+    
+    setTimeout(() => {
+        message.remove();
+    }, 2000);
+}
+
 // 충돌 검사
 function checkCollisions() {
     // 패들과 공 충돌
@@ -332,8 +733,20 @@ function checkCollisions() {
             gameState.ball.y + gameState.ball.radius >= brick.y &&
             gameState.ball.y - gameState.ball.radius <= brick.y + brick.height) {
             
-            brick.visible = false;
-            gameState.score += 10;
+            // 강화된 벽돌 처리
+            if (brick.enhanced) {
+                brick.hits--;
+                if (brick.hits <= 0) {
+                    brick.visible = false;
+                    gameState.score += 20; // 강화된 벽돌은 더 많은 점수
+                } else {
+                    gameState.score += 5; // 첫 번째 타격 점수
+                }
+            } else {
+                brick.visible = false;
+                gameState.score += 10;
+            }
+            
             updateUI(); // 점수 UI 업데이트 추가
             gameState.sounds.brickBreak();
             
@@ -520,6 +933,7 @@ function restartGame() {
 function updateUI() {
     document.getElementById('score').textContent = gameState.score;
     document.getElementById('lives').textContent = gameState.lives;
+    document.getElementById('stage').textContent = gameState.currentStage;
 }
 
 // 그리기 함수
@@ -540,15 +954,70 @@ function draw() {
     gameState.ctx.fillStyle = gameState.paddle.color;
     gameState.ctx.fillRect(gameState.paddle.x, gameState.paddle.y, gameState.paddle.width, gameState.paddle.height);
     
+    // 가이드라인 그리기
+    for (let guide of gameState.guideLines) {
+        gameState.ctx.strokeStyle = guide.color;
+        gameState.ctx.lineWidth = 1;
+        gameState.ctx.setLineDash([5, 5]);
+        
+        if (guide.type === 'vertical') {
+            gameState.ctx.beginPath();
+            gameState.ctx.moveTo(guide.x, guide.y);
+            gameState.ctx.lineTo(guide.x, guide.endY);
+            gameState.ctx.stroke();
+        } else if (guide.type === 'horizontal') {
+            gameState.ctx.beginPath();
+            gameState.ctx.moveTo(guide.x, guide.y);
+            gameState.ctx.lineTo(guide.endX, guide.y);
+            gameState.ctx.stroke();
+        } else if (guide.type === 'dot') {
+            gameState.ctx.fillStyle = guide.color;
+            gameState.ctx.beginPath();
+            gameState.ctx.arc(guide.x, guide.y, guide.radius, 0, Math.PI * 2);
+            gameState.ctx.fill();
+        }
+    }
+    
+    // 자기장 그리기
+    for (let field of gameState.magneticFields) {
+        gameState.ctx.strokeStyle = field.type === 'attract' ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
+        gameState.ctx.lineWidth = 2;
+        gameState.ctx.setLineDash([]);
+        gameState.ctx.beginPath();
+        gameState.ctx.arc(field.x, field.y, field.radius, 0, Math.PI * 2);
+        gameState.ctx.stroke();
+        
+        // 자기장 중심 표시
+        gameState.ctx.fillStyle = field.type === 'attract' ? 'rgba(0, 255, 0, 0.6)' : 'rgba(255, 0, 0, 0.6)';
+        gameState.ctx.beginPath();
+        gameState.ctx.arc(field.x, field.y, 5, 0, Math.PI * 2);
+        gameState.ctx.fill();
+    }
+    
     // 벽돌 그리기
     for (let brick of gameState.bricks) {
         if (!brick.visible) continue;
         
-        gameState.ctx.fillStyle = brick.color;
-        gameState.ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
-        gameState.ctx.strokeStyle = '#fff';
-        gameState.ctx.lineWidth = 2;
-        gameState.ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
+        // 강화된 벽돌은 다른 스타일
+        if (brick.enhanced) {
+            gameState.ctx.fillStyle = brick.color;
+            gameState.ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+            gameState.ctx.strokeStyle = '#ffd700';
+            gameState.ctx.lineWidth = 3;
+            gameState.ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
+            
+            // 강화 표시
+            gameState.ctx.fillStyle = '#ffd700';
+            gameState.ctx.font = 'bold 12px Arial';
+            gameState.ctx.textAlign = 'center';
+            gameState.ctx.fillText('★', brick.x + brick.width/2, brick.y + brick.height/2 + 4);
+        } else {
+            gameState.ctx.fillStyle = brick.color;
+            gameState.ctx.fillRect(brick.x, brick.y, brick.width, brick.height);
+            gameState.ctx.strokeStyle = '#fff';
+            gameState.ctx.lineWidth = 2;
+            gameState.ctx.strokeRect(brick.x, brick.y, brick.width, brick.height);
+        }
     }
     
     // 아이템 그리기
@@ -576,12 +1045,60 @@ function draw() {
     gameState.ctx.shadowColor = 'transparent';
 }
 
-// 미사일 발사 (스페이스바)
+// 키보드 이벤트
 document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && gameState.gameRunning) {
-        fireMissile();
+    if (e.code === 'Space') {
+        if (gameState.gameRunning && !gameState.gameOver) {
+            if (gameState.missileMode) {
+                fireMissile();
+            } else {
+                // 일시정지 토글
+                gameState.paused = !gameState.paused;
+                if (gameState.paused) {
+                    showPauseMessage();
+                } else {
+                    hidePauseMessage();
+                }
+            }
+        }
     }
 });
+
+// 일시정지 메시지 표시
+function showPauseMessage() {
+    const message = document.createElement('div');
+    message.id = 'pause-message';
+    message.innerHTML = `
+        <h2>일시정지</h2>
+        <p>스페이스바를 눌러 계속하세요</p>
+    `;
+    message.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: #f39c12;
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        border: 3px solid #f39c12;
+        box-shadow: 0 0 30px rgba(243, 156, 18, 0.8);
+        z-index: 1000;
+    `;
+    
+    document.body.appendChild(message);
+}
+
+// 일시정지 메시지 숨기기
+function hidePauseMessage() {
+    const message = document.getElementById('pause-message');
+    if (message) {
+        message.remove();
+    }
+}
 
 // 게임 시작
 document.addEventListener('DOMContentLoaded', () => {

@@ -30,12 +30,17 @@ body {
     font-weight: bold;
 }
 
-.score, .lives {
+.score, .lives, .stage {
     background: rgba(0, 0, 0, 0.3);
     padding: 10px 20px;
     border-radius: 10px;
     border: 2px solid #3498db;
     box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+}
+
+.stage {
+    border-color: #e74c3c;
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
 }
 
 #gameCanvas {
