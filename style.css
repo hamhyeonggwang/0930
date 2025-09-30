@@ -234,6 +234,19 @@ body {
     padding: 20px;
 }
 
+/* 사이드 모드 회전 */
+.game-container.side-mode {
+    transform: rotate(90deg);
+    transform-origin: center center;
+    width: 100vh;
+    height: 100vw;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    margin-top: -50vw;
+    margin-left: -50vh;
+}
+
 .game-header {
     display: flex;
     justify-content: space-between;

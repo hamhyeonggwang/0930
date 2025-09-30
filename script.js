@@ -138,14 +138,28 @@ function initBall() {
 // 패들 초기화
 function initPaddle() {
     const paddleWidth = gameState.paddleExtended ? 150 : 100;
-    gameState.paddle = {
-        x: gameState.canvas.width / 2 - paddleWidth / 2,
-        y: gameState.canvas.height - 30,
-        width: paddleWidth,
-        height: 15,
-        color: '#3498db',
-        speed: 8
-    };
+    
+    if (gameState.gameMode === 'side') {
+        // 사이드 모드: 세로로 배치
+        gameState.paddle = {
+            x: gameState.canvas.width - 30,
+            y: gameState.canvas.height / 2 - paddleWidth / 2,
+            width: 15,
+            height: paddleWidth,
+            color: '#3498db',
+            speed: 8
+        };
+    } else {
+        // 일반 모드: 가로로 배치
+        gameState.paddle = {
+            x: gameState.canvas.width / 2 - paddleWidth / 2,
+            y: gameState.canvas.height - 30,
+            width: paddleWidth,
+            height: 15,
+            color: '#3498db',
+            speed: 8
+        };
+    }
 }
 
 // 벽돌 초기화
@@ -590,13 +604,27 @@ function handleMouseMove(e) {
     if (!gameState.gameRunning) return;
     
     const rect = gameState.canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    gameState.paddle.x = mouseX - gameState.paddle.width / 2;
     
-    // 패들 경계 제한
-    if (gameState.paddle.x < 0) gameState.paddle.x = 0;
-    if (gameState.paddle.x > gameState.canvas.width - gameState.paddle.width) {
-        gameState.paddle.x = gameState.canvas.width - gameState.paddle.width;
+    if (gameState.gameMode === 'side') {
+        // 사이드 모드: 위아래로 움직임
+        const mouseY = e.clientY - rect.top;
+        gameState.paddle.y = mouseY - gameState.paddle.height / 2;
+        
+        // 패들 경계 제한 (세로)
+        if (gameState.paddle.y < 0) gameState.paddle.y = 0;
+        if (gameState.paddle.y > gameState.canvas.height - gameState.paddle.height) {
+            gameState.paddle.y = gameState.canvas.height - gameState.paddle.height;
+        }
+    } else {
+        // 일반 모드: 좌우로 움직임
+        const mouseX = e.clientX - rect.left;
+        gameState.paddle.x = mouseX - gameState.paddle.width / 2;
+        
+        // 패들 경계 제한 (가로)
+        if (gameState.paddle.x < 0) gameState.paddle.x = 0;
+        if (gameState.paddle.x > gameState.canvas.width - gameState.paddle.width) {
+            gameState.paddle.x = gameState.canvas.width - gameState.paddle.width;
+        }
     }
 }
 
@@ -606,12 +634,27 @@ function handleTouchMove(e) {
     if (!gameState.gameRunning) return;
     
     const rect = gameState.canvas.getBoundingClientRect();
-    const touchX = e.touches[0].clientX - rect.left;
-    gameState.paddle.x = touchX - gameState.paddle.width / 2;
     
-    if (gameState.paddle.x < 0) gameState.paddle.x = 0;
-    if (gameState.paddle.x > gameState.canvas.width - gameState.paddle.width) {
-        gameState.paddle.x = gameState.canvas.width - gameState.paddle.width;
+    if (gameState.gameMode === 'side') {
+        // 사이드 모드: 위아래로 움직임
+        const touchY = e.touches[0].clientY - rect.top;
+        gameState.paddle.y = touchY - gameState.paddle.height / 2;
+        
+        // 패들 경계 제한 (세로)
+        if (gameState.paddle.y < 0) gameState.paddle.y = 0;
+        if (gameState.paddle.y > gameState.canvas.height - gameState.paddle.height) {
+            gameState.paddle.y = gameState.canvas.height - gameState.paddle.height;
+        }
+    } else {
+        // 일반 모드: 좌우로 움직임
+        const touchX = e.touches[0].clientX - rect.left;
+        gameState.paddle.x = touchX - gameState.paddle.width / 2;
+        
+        // 패들 경계 제한 (가로)
+        if (gameState.paddle.x < 0) gameState.paddle.x = 0;
+        if (gameState.paddle.x > gameState.canvas.width - gameState.paddle.width) {
+            gameState.paddle.x = gameState.canvas.width - gameState.paddle.width;
+        }
     }
 }
 
@@ -642,12 +685,24 @@ function setupJoystick() {
             knob.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px))`;
             
             // 패들 이동
-            const moveAmount = (deltaX / maxDistance) * gameState.paddle.speed * 2;
-            gameState.paddle.x += moveAmount;
-            
-            if (gameState.paddle.x < 0) gameState.paddle.x = 0;
-            if (gameState.paddle.x > gameState.canvas.width - gameState.paddle.width) {
-                gameState.paddle.x = gameState.canvas.width - gameState.paddle.width;
+            if (gameState.gameMode === 'side') {
+                // 사이드 모드: 위아래로 움직임
+                const moveAmount = (deltaY / maxDistance) * gameState.paddle.speed * 2;
+                gameState.paddle.y += moveAmount;
+                
+                if (gameState.paddle.y < 0) gameState.paddle.y = 0;
+                if (gameState.paddle.y > gameState.canvas.height - gameState.paddle.height) {
+                    gameState.paddle.y = gameState.canvas.height - gameState.paddle.height;
+                }
+            } else {
+                // 일반 모드: 좌우로 움직임
+                const moveAmount = (deltaX / maxDistance) * gameState.paddle.speed * 2;
+                gameState.paddle.x += moveAmount;
+                
+                if (gameState.paddle.x < 0) gameState.paddle.x = 0;
+                if (gameState.paddle.x > gameState.canvas.width - gameState.paddle.width) {
+                    gameState.paddle.x = gameState.canvas.width - gameState.paddle.width;
+                }
             }
         }
     });
@@ -1442,6 +1497,14 @@ function changeGameMode(mode) {
     // 버튼 상태 업데이트
     document.getElementById('normalModeBtn').classList.toggle('active', mode === 'normal');
     document.getElementById('sideModeBtn').classList.toggle('active', mode === 'side');
+    
+    // 사이드 모드일 때 게임 컨테이너에 클래스 추가
+    const gameContainer = document.getElementById('gameContainer');
+    if (mode === 'side') {
+        gameContainer.classList.add('side-mode');
+    } else {
+        gameContainer.classList.remove('side-mode');
+    }
     
     restartGame();
     
