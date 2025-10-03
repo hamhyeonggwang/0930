@@ -39,8 +39,6 @@ const gameState = {
     slowMode: false,
     slowModeMultiplier: 0.5,
     
-    // 게임 모드
-    gameMode: 'normal', // 'normal' 또는 'side'
 };
 
 // 단계별 설정
@@ -138,28 +136,14 @@ function initBall() {
 // 패들 초기화
 function initPaddle() {
     const paddleWidth = gameState.paddleExtended ? 150 : 100;
-    
-    if (gameState.gameMode === 'side') {
-        // 사이드 모드: 세로로 배치
-        gameState.paddle = {
-            x: gameState.canvas.width - 30,
-            y: gameState.canvas.height / 2 - paddleWidth / 2,
-            width: 15,
-            height: paddleWidth,
-            color: '#3498db',
-            speed: 8
-        };
-    } else {
-        // 일반 모드: 가로로 배치
-        gameState.paddle = {
-            x: gameState.canvas.width / 2 - paddleWidth / 2,
-            y: gameState.canvas.height - 30,
-            width: paddleWidth,
-            height: 15,
-            color: '#3498db',
-            speed: 8
-        };
-    }
+    gameState.paddle = {
+        x: gameState.canvas.width / 2 - paddleWidth / 2,
+        y: gameState.canvas.height - 30,
+        width: paddleWidth,
+        height: 15,
+        color: '#3498db',
+        speed: 8
+    };
 }
 
 // 벽돌 초기화
@@ -171,11 +155,7 @@ function initBricks() {
     const config = stageConfig[gameState.currentStage];
     const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22', '#e91e63', '#00bcd4'];
     
-    if (gameState.gameMode === 'side') {
-        // 사이드 모드: 벽돌을 좌/우에 배치
-        createSideModeBricks(config, colors);
-    } else {
-        // 일반 모드: 기존 방식
+    // 일반 모드: 기존 방식
         const cols = 10;
         const brickWidth = 70;
         const brickHeight = 25;
@@ -198,47 +178,6 @@ function initBricks() {
     }
 }
 
-// 사이드 모드 벽돌 생성
-function createSideModeBricks(config, colors) {
-    const brickWidth = 25;
-    const brickHeight = 70;
-    const padding = 5;
-    const enhancedBrickChance = Math.min(0.1 + (gameState.currentStage - 5) * 0.05, 0.4);
-    
-    // 왼쪽 벽돌들
-    for (let r = 0; r < config.rows; r++) {
-        for (let c = 0; c < 3; c++) {
-            const isEnhanced = Math.random() < enhancedBrickChance;
-            gameState.bricks.push({
-                x: 50 + c * (brickWidth + padding),
-                y: 100 + r * (brickHeight + padding),
-                width: brickWidth,
-                height: brickHeight,
-                color: colors[r % colors.length],
-                visible: true,
-                enhanced: isEnhanced,
-                hits: isEnhanced ? 2 : 1
-            });
-        }
-    }
-    
-    // 오른쪽 벽돌들
-    for (let r = 0; r < config.rows; r++) {
-        for (let c = 0; c < 3; c++) {
-            const isEnhanced = Math.random() < enhancedBrickChance;
-            gameState.bricks.push({
-                x: gameState.canvas.width - 50 - (c + 1) * (brickWidth + padding),
-                y: 100 + r * (brickHeight + padding),
-                width: brickWidth,
-                height: brickHeight,
-                color: colors[r % colors.length],
-                visible: true,
-                enhanced: isEnhanced,
-                hits: isEnhanced ? 2 : 1
-            });
-        }
-    }
-}
 
 // 가이드라인 생성
 function createGuideLines(offsetTop, offsetLeft, cols, brickWidth, brickHeight, padding) {
@@ -604,27 +543,13 @@ function handleMouseMove(e) {
     if (!gameState.gameRunning) return;
     
     const rect = gameState.canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    gameState.paddle.x = mouseX - gameState.paddle.width / 2;
     
-    if (gameState.gameMode === 'side') {
-        // 사이드 모드: 위아래로 움직임
-        const mouseY = e.clientY - rect.top;
-        gameState.paddle.y = mouseY - gameState.paddle.height / 2;
-        
-        // 패들 경계 제한 (세로)
-        if (gameState.paddle.y < 0) gameState.paddle.y = 0;
-        if (gameState.paddle.y > gameState.canvas.height - gameState.paddle.height) {
-            gameState.paddle.y = gameState.canvas.height - gameState.paddle.height;
-        }
-    } else {
-        // 일반 모드: 좌우로 움직임
-        const mouseX = e.clientX - rect.left;
-        gameState.paddle.x = mouseX - gameState.paddle.width / 2;
-        
-        // 패들 경계 제한 (가로)
-        if (gameState.paddle.x < 0) gameState.paddle.x = 0;
-        if (gameState.paddle.x > gameState.canvas.width - gameState.paddle.width) {
-            gameState.paddle.x = gameState.canvas.width - gameState.paddle.width;
-        }
+    // 패들 경계 제한
+    if (gameState.paddle.x < 0) gameState.paddle.x = 0;
+    if (gameState.paddle.x > gameState.canvas.width - gameState.paddle.width) {
+        gameState.paddle.x = gameState.canvas.width - gameState.paddle.width;
     }
 }
 
@@ -634,27 +559,12 @@ function handleTouchMove(e) {
     if (!gameState.gameRunning) return;
     
     const rect = gameState.canvas.getBoundingClientRect();
+    const touchX = e.touches[0].clientX - rect.left;
+    gameState.paddle.x = touchX - gameState.paddle.width / 2;
     
-    if (gameState.gameMode === 'side') {
-        // 사이드 모드: 위아래로 움직임
-        const touchY = e.touches[0].clientY - rect.top;
-        gameState.paddle.y = touchY - gameState.paddle.height / 2;
-        
-        // 패들 경계 제한 (세로)
-        if (gameState.paddle.y < 0) gameState.paddle.y = 0;
-        if (gameState.paddle.y > gameState.canvas.height - gameState.paddle.height) {
-            gameState.paddle.y = gameState.canvas.height - gameState.paddle.height;
-        }
-    } else {
-        // 일반 모드: 좌우로 움직임
-        const touchX = e.touches[0].clientX - rect.left;
-        gameState.paddle.x = touchX - gameState.paddle.width / 2;
-        
-        // 패들 경계 제한 (가로)
-        if (gameState.paddle.x < 0) gameState.paddle.x = 0;
-        if (gameState.paddle.x > gameState.canvas.width - gameState.paddle.width) {
-            gameState.paddle.x = gameState.canvas.width - gameState.paddle.width;
-        }
+    if (gameState.paddle.x < 0) gameState.paddle.x = 0;
+    if (gameState.paddle.x > gameState.canvas.width - gameState.paddle.width) {
+        gameState.paddle.x = gameState.canvas.width - gameState.paddle.width;
     }
 }
 
@@ -685,24 +595,12 @@ function setupJoystick() {
             knob.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px))`;
             
             // 패들 이동
-            if (gameState.gameMode === 'side') {
-                // 사이드 모드: 위아래로 움직임
-                const moveAmount = (deltaY / maxDistance) * gameState.paddle.speed * 2;
-                gameState.paddle.y += moveAmount;
-                
-                if (gameState.paddle.y < 0) gameState.paddle.y = 0;
-                if (gameState.paddle.y > gameState.canvas.height - gameState.paddle.height) {
-                    gameState.paddle.y = gameState.canvas.height - gameState.paddle.height;
-                }
-            } else {
-                // 일반 모드: 좌우로 움직임
-                const moveAmount = (deltaX / maxDistance) * gameState.paddle.speed * 2;
-                gameState.paddle.x += moveAmount;
-                
-                if (gameState.paddle.x < 0) gameState.paddle.x = 0;
-                if (gameState.paddle.x > gameState.canvas.width - gameState.paddle.width) {
-                    gameState.paddle.x = gameState.canvas.width - gameState.paddle.width;
-                }
+            const moveAmount = (deltaX / maxDistance) * gameState.paddle.speed * 2;
+            gameState.paddle.x += moveAmount;
+            
+            if (gameState.paddle.x < 0) gameState.paddle.x = 0;
+            if (gameState.paddle.x > gameState.canvas.width - gameState.paddle.width) {
+                gameState.paddle.x = gameState.canvas.width - gameState.paddle.width;
             }
         }
     });
@@ -1440,7 +1338,6 @@ function loadSettings() {
         gameState.gameSpeed = settings.gameSpeed || 1.0;
         gameState.soundVolume = settings.soundVolume || 0.5;
         gameState.soundEnabled = settings.soundEnabled !== false;
-        gameState.gameMode = settings.gameMode || 'normal';
     }
     
     // UI 업데이트
@@ -1448,9 +1345,6 @@ function loadSettings() {
     document.getElementById('soundVolume').value = gameState.soundVolume;
     document.getElementById('soundEnabled').checked = gameState.soundEnabled;
     
-    // 모드 버튼 상태 업데이트
-    document.getElementById('normalModeBtn').classList.toggle('active', gameState.gameMode === 'normal');
-    document.getElementById('sideModeBtn').classList.toggle('active', gameState.gameMode === 'side');
     
     updateSettingValues();
 }
@@ -1490,57 +1384,11 @@ function updateSettingValues() {
     document.getElementById('volumeValue').textContent = Math.round(gameState.soundVolume * 100) + '%';
 }
 
-// 게임 모드 변경
-function changeGameMode(mode) {
-    gameState.gameMode = mode;
-    
-    // 버튼 상태 업데이트
-    document.getElementById('normalModeBtn').classList.toggle('active', mode === 'normal');
-    document.getElementById('sideModeBtn').classList.toggle('active', mode === 'side');
-    
-    // 사이드 모드일 때 게임 컨테이너에 클래스 추가
-    const gameContainer = document.getElementById('gameContainer');
-    if (mode === 'side') {
-        gameContainer.classList.add('side-mode');
-    } else {
-        gameContainer.classList.remove('side-mode');
-    }
-    
-    restartGame();
-    
-    // 설정 저장
-    const settings = {
-        gameSpeed: gameState.gameSpeed,
-        soundVolume: gameState.soundVolume,
-        soundEnabled: gameState.soundEnabled,
-        gameMode: gameState.gameMode
-    };
-    localStorage.setItem('brickBreakerSettings', JSON.stringify(settings));
-}
 
 // 설정 이벤트 리스너
-// 모드 선택
-function selectMode(mode) {
-    gameState.gameMode = mode;
-    
-    // 버튼 상태 업데이트
-    document.getElementById('startNormalBtn').classList.toggle('selected', mode === 'normal');
-    document.getElementById('startSideBtn').classList.toggle('selected', mode === 'side');
-    
-    // 게임 시작 버튼 활성화
-    document.getElementById('startGameBtn').disabled = false;
-    
-    // 설정 저장
-    saveSettings();
-}
 
 // 게임 시작
 function startGame() {
-    if (!gameState.gameMode) {
-        alert('게임 모드를 먼저 선택해주세요!');
-        return;
-    }
-    
     document.getElementById('startScreen').style.display = 'none';
     document.getElementById('gameContainer').style.display = 'flex';
     initGame();
@@ -1620,10 +1468,6 @@ document.addEventListener('DOMContentLoaded', () => {
         gameState.soundEnabled = e.target.checked;
     });
     
-    // 저장된 모드 불러오기
+    // 설정 불러오기
     loadSettings();
-    const savedMode = gameState.gameMode;
-    if (savedMode) {
-        selectMode(savedMode);
-    }
 });

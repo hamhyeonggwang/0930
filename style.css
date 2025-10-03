@@ -135,47 +135,6 @@ body {
     box-shadow: 0 0 5px #fff;
 }
 
-/* 모드 선택 */
-.mode-selection {
-    margin: 40px 0;
-}
-
-.mode-buttons {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.retro-mode-btn {
-    background: #000;
-    border: 2px solid #fff;
-    color: #fff;
-    padding: 15px 30px;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-family: 'Courier New', monospace;
-    font-size: 1em;
-    font-weight: bold;
-    letter-spacing: 1px;
-    min-width: 120px;
-}
-
-.retro-mode-btn:hover {
-    background: #fff;
-    color: #000;
-    box-shadow: 0 0 10px #fff;
-}
-
-.retro-mode-btn.selected {
-    background: #fff;
-    color: #000;
-    box-shadow: 0 0 15px #fff;
-}
-
-.mode-text {
-    display: block;
-}
 
 /* 시작 버튼 */
 .start-buttons {
@@ -234,18 +193,6 @@ body {
     padding: 20px;
 }
 
-/* 사이드 모드 회전 */
-.game-container.side-mode {
-    transform: rotate(90deg);
-    transform-origin: center center;
-    width: 100vh;
-    height: 100vw;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    margin-top: -50vw;
-    margin-left: -50vh;
-}
 
 .game-header {
     display: flex;
